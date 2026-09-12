@@ -127,6 +127,15 @@ func TestExtensionSupportsOpenDefaultConnection(t *testing.T) {
 	if err != nil {
 		t.Fatalf("OpenDefaultConnection() error = %v, want nil", err)
 	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatalf("OpenDefaultConnection().DB() error = %v, want nil", err)
+	}
+	t.Cleanup(func() {
+		if err := sqlDB.Close(); err != nil {
+			t.Errorf("OpenDefaultConnection().DB().Close() error = %v, want nil", err)
+		}
+	})
 	if db.Name() != "sqlite" {
 		t.Fatalf("OpenDefaultConnection() dialect = %q, want sqlite", db.Name())
 	}
@@ -428,12 +437,14 @@ func TestExtensionProvidesSQLiteMetadata(t *testing.T) {
 }
 
 func TestExtensionFiltersSQLiteTablesAndViewsByAttachedSchema(t *testing.T) {
+	// Register TempDir cleanup before the connection cleanup so Windows can remove the attached file.
+	auxPath := filepath.Join(t.TempDir(), "aux.sqlite")
 	db := openSQLiteTestDB(t)
 	if err := db.Exec("CREATE TABLE main_widget (id integer primary key)").Error; err != nil {
 		t.Fatalf("create main table: %v", err)
 	}
 	err := db.Connection(func(connection *gorm.DB) error {
-		if err := connection.Exec("ATTACH DATABASE ? AS aux", filepath.Join(t.TempDir(), "aux.sqlite")).Error; err != nil {
+		if err := connection.Exec("ATTACH DATABASE ? AS aux", auxPath).Error; err != nil {
 			return fmt.Errorf("attach aux database: %w", err)
 		}
 		if err := connection.Exec("CREATE TABLE aux.aux_widget (id integer primary key)").Error; err != nil {
