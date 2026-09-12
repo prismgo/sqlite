@@ -44,7 +44,7 @@ jobs:
 
       - name: Test extension
         working-directory: sqlite
-        run: go test -race -count=1 -coverprofile=coverage.out ./...
+        run: go test -race -count=1 '-coverprofile=coverage.out' ./...
 
       - name: Enforce 90 percent statement coverage
         if: runner.os == 'Linux'
