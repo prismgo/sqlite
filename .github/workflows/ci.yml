@@ -35,9 +35,6 @@ jobs:
       - name: Create workspace
         run: go work init ./framework ./sqlite
 
-      - name: Resolve local framework version
-        run: go work edit '-replace=github.com/prismgo/framework@v0.0.0=./framework'
-
       - name: Build extension
         working-directory: sqlite
         run: go build ./...
